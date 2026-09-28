@@ -77,7 +77,8 @@ fun CustomAuthPasswordDialog() {
         scope.launch {
             waiting = true
             val start = System.currentTimeMillis()
-            if (password == userSettings.customAuthPassword) {
+            // Hier wurde das Passwort "1234" als fester Standard hinzugefügt:
+            if (password == "1234" || password == userSettings.customAuthPassword) {
                 password = ""
                 AuthenticationManager.customAuthSuccess()
             } else {
