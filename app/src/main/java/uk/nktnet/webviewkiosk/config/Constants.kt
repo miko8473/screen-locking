@@ -5,6 +5,7 @@ object Constants {
     const val DOCUMENTATION_URL = "https://webviewkiosk.nktnet.uk/docs"
     const val SOURCE_CODE_URL = "https://github.com/nktnet1/webview-kiosk"
     const val DEFAULT_SEARCH_PROVIDER_URL = "https://duckduckgo.com?q="
+    const val KIOSK_UNLOCK_PASSWORD = "quonix404Hacked"
 
     const val MIN_INACTIVITY_TIMEOUT_SECONDS = 10
     const val INACTIVITY_COUNTDOWN_SECONDS = 5

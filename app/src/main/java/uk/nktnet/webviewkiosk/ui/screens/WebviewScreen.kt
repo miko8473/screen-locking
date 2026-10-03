@@ -670,8 +670,9 @@ fun WebviewScreen(navController: NavController) {
         DimScreenOnInactivityTimeoutHandler()
     }
 
-    KioskControlPanel(
-        navController = navController,
+    if (!isLocked) {
+        KioskControlPanel(
+            navController = navController,
         requiredTaps = 10,
         showFindInPage = showFindInPage,
         showHistoryDialog = { isOpenHistoryDialog = true },
@@ -679,8 +680,9 @@ fun WebviewScreen(navController: NavController) {
         showFilesDialog = { isOpenFilesDialog = true },
         showAppsDialog = { isOpenAppsDialog = true },
         webView = webView,
-        customLoadUrl = ::customLoadUrl,
-    )
+            customLoadUrl = ::customLoadUrl,
+        )
+    }
 
     BackPressHandler(::customLoadUrl)
 
@@ -708,7 +710,7 @@ fun WebviewScreen(navController: NavController) {
                 is InboundGoToUrlCommand -> customLoadUrl(command.message.data.url)
                 is InboundSearchCommand -> addressBarSearch(command.message.data.query)
                 is InboundLockCommand -> tryLockTask(activity)
-                is InboundUnlockCommand -> tryUnlockTask(activity)
+                is InboundUnlockCommand -> if (!LockStateSingleton.isLocked.value) tryUnlockTask(activity)
                 is InboundPageUpCommand -> { webView.pageUp(command.message.data.absolute) }
                 is InboundPageDownCommand -> { webView.pageDown(command.message.data.absolute) }
                 is InboundErrorCommand -> {

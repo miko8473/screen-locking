@@ -361,7 +361,7 @@ class UserSettings(val context: Context) {
         getRestrictions,
         prefs,
         UserSettingsKeys.WebLifecycle.LOCK_ON_LAUNCH,
-        false
+        true
     )
     var resetOnLaunch by booleanPref(
         getRestrictions,
