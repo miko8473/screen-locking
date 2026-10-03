@@ -163,6 +163,28 @@ data class OutboundPowerUnpluggedEvent(
 }
 
 @Serializable
+@SerialName("file_transfer")
+data class OutboundFileTransferEvent(
+    override val messageId: String,
+    override val username: String,
+    override val appInstanceId: String,
+    val data: FileTransferData,
+) : OutboundEventMessage {
+    @Serializable
+    data class FileTransferData(
+        val transferId: String,
+        val fileName: String,
+        val mimeType: String,
+        val size: Long,
+        val sha256: String,
+        val totalChunks: Int,
+        val chunkSize: Int,
+        val category: String,
+    )
+    override fun getEventType(): String = "file_transfer"
+}
+
+@Serializable
 @SerialName("application_restrictions_changed")
 data class OutboundApplicationRestrictionsChangedEvent(
     override val messageId: String,
