@@ -40,6 +40,8 @@ class Config:
     tls: bool = os.getenv("QUONIX_MQTT_TLS", "0") == "1"
     app_instance_id: str = os.getenv("QUONIX_APP_INSTANCE_ID", "")
     timeout: float = float(os.getenv("QUONIX_TIMEOUT", "15"))
+    command_topic: str = os.getenv("QUONIX_COMMAND_TOPIC", "wk/command")
+    event_topic: str = os.getenv("QUONIX_EVENT_TOPIC", "wk/event/#")
 
 
 class Terminal:
@@ -64,11 +66,11 @@ class Terminal:
 
     @property
     def command_topic(self) -> str:
-        return "wk/command"
+        return self.cfg.command_topic
 
     @property
     def event_topic(self) -> str:
-        return "wk/event/#"
+        return self.cfg.event_topic
 
     def connect(self) -> None:
         print(f"Verbinde MQTT: {self.cfg.broker}:{self.cfg.port} ...")
@@ -187,7 +189,7 @@ class Terminal:
 
         try:
             info = self.client.publish(
-                "wk/command",
+                self.command_topic,
                 json.dumps(payload, separators=(",", ":")),
                 qos=1,
             )
