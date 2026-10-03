@@ -60,7 +60,7 @@ private fun handleCustomUnlockShortcut(
     val activityManager = activity.getSystemService(ACTIVITY_SERVICE) as ActivityManager
     val userSettings = UserSettings(activity)
 
-    val shouldUnlock = getIsLocked(activityManager)
+    val shouldUnlock = !getIsLocked(activityManager)
         && userSettings.customUnlockShortcut.isNotEmpty()
         && isShortcutPressed(event, userSettings.customUnlockShortcut)
 
