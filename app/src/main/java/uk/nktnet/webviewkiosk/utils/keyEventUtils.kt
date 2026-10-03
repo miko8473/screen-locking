@@ -1,9 +1,6 @@
 package uk.nktnet.webviewkiosk.utils
 
-import android.app.Activity
-import android.app.ActivityManager
 import android.content.Context
-import android.content.Context.ACTIVITY_SERVICE
 import android.view.KeyEvent
 import uk.nktnet.webviewkiosk.config.UserSettings
 import uk.nktnet.webviewkiosk.states.UserInteractionStateSingleton
@@ -52,19 +49,6 @@ fun isShortcutPressed(event: KeyEvent, storedShortcut: String): Boolean {
     return shortcut.equals(storedShortcut, ignoreCase = true)
 }
 
-private fun handleCustomUnlockShortcut(
-    context: Context,
-    event: KeyEvent,
-): Boolean {
-    val activity = context as? Activity ?: return false
-    val activityManager = activity.getSystemService(ACTIVITY_SERVICE) as ActivityManager
-    val userSettings = UserSettings(activity)
-
-    // The QUONIX kiosk lock screen is intentionally password-only.
-    // Do not allow keyboard shortcuts to bypass it.
-    return false
-}
-
 private fun handleBlockVolumeKeys(event: KeyEvent): Boolean {
     return when (event.keyCode) {
         KeyEvent.KEYCODE_VOLUME_UP,
@@ -79,6 +63,5 @@ fun handleKeyEvent(context: Context, event: KeyEvent): Boolean {
     val userSettings = UserSettings(context)
     return (
         (userSettings.blockVolumeKeys && handleBlockVolumeKeys(event))
-        || handleCustomUnlockShortcut(context, event)
     )
 }
