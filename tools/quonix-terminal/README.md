@@ -59,3 +59,6 @@ die Authentifizierung erfolgt lokal auf Android.
 Website-Download, Screenshot-Export und Medienexport aus der früheren Prototyp-Version
 sind bewusst nicht als funktionierende Android-Befehle ausgegeben. Das verhindert,
 dass das Terminal Erfolg meldet, obwohl die Android-App keinen entsprechenden Handler hat.
+
+
+<!-- final build verification -->
