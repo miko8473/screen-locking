@@ -670,8 +670,9 @@ fun WebviewScreen(navController: NavController) {
         DimScreenOnInactivityTimeoutHandler()
     }
 
-    KioskControlPanel(
-        navController = navController,
+    if (!isLocked) {
+        KioskControlPanel(
+            navController = navController,
         requiredTaps = 10,
         showFindInPage = showFindInPage,
         showHistoryDialog = { isOpenHistoryDialog = true },
@@ -679,8 +680,9 @@ fun WebviewScreen(navController: NavController) {
         showFilesDialog = { isOpenFilesDialog = true },
         showAppsDialog = { isOpenAppsDialog = true },
         webView = webView,
-        customLoadUrl = ::customLoadUrl,
-    )
+            customLoadUrl = ::customLoadUrl,
+        )
+    }
 
     BackPressHandler(::customLoadUrl)
 
