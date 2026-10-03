@@ -1,11 +1,14 @@
 package uk.nktnet.webviewkiosk.utils
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import android.provider.MediaStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +78,27 @@ object QuonixTransferManager {
                 MqttManager.publishTransferError("screenshot", e.message ?: e.toString())
             }
         }
+    }
+
+    fun ensureMediaPermission(context: Context, includeImages: Boolean, includeVideos: Boolean): Boolean {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            buildList {
+                if (includeImages) add(Manifest.permission.READ_MEDIA_IMAGES)
+                if (includeVideos) add(Manifest.permission.READ_MEDIA_VIDEO)
+            }
+        } else {
+            listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+        val missing = permissions.filter {
+            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) return true
+
+        (context as? Activity)?.requestPermissions(
+            missing.toTypedArray(),
+            4040
+        )
+        return false
     }
 
     fun exportMedia(context: Context, includeImages: Boolean, includeVideos: Boolean) {
