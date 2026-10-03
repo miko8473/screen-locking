@@ -78,6 +78,7 @@ import uk.nktnet.webviewkiosk.utils.replaceVariables
 import java.io.InputStream
 import java.security.MessageDigest
 import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
