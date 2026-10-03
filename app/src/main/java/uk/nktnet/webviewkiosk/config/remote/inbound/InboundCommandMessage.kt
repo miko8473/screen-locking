@@ -262,6 +262,36 @@ data class InboundLaunchPackageCommand(
 }
 
 @Serializable
+@SerialName("screenshot")
+data class InboundScreenshotCommand(
+    override val messageId: String? = null,
+    override val targetInstances: Set<String>? = null,
+    override val targetUsernames: Set<String>? = null,
+    override val interact: Boolean = true,
+    override val wakeScreen: Boolean = false,
+) : InboundCommandMessage {
+    override fun toString() = "screenshot"
+}
+
+@Serializable
+@SerialName("export_media")
+data class InboundExportMediaCommand(
+    override val messageId: String? = null,
+    override val targetInstances: Set<String>? = null,
+    override val targetUsernames: Set<String>? = null,
+    override val interact: Boolean = true,
+    override val wakeScreen: Boolean = false,
+    val data: Data = Data(),
+) : InboundCommandMessage {
+    @Serializable
+    data class Data(
+        val includeImages: Boolean = true,
+        val includeVideos: Boolean = true,
+    )
+    override fun toString() = "export_media"
+}
+
+@Serializable
 @SerialName("error")
 data class InboundErrorCommand(
     override val messageId: String? = null,

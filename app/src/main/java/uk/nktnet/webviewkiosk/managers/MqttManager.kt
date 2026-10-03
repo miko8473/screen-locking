@@ -51,6 +51,8 @@ import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundDisconnectingEvent
 import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundErrorResponse
 import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundEventJsonParser
 import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundEventMessage
+import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundFileTransferErrorEvent
+import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundFileTransferEvent
 import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundLaunchablePackagesResponse
 import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundLockEvent
 import uk.nktnet.webviewkiosk.config.remote.outbound.OutboundLockTaskPackagesResponse
@@ -73,7 +75,10 @@ import uk.nktnet.webviewkiosk.utils.getStatus
 import uk.nktnet.webviewkiosk.utils.isValidMqttPublishTopic
 import uk.nktnet.webviewkiosk.utils.isValidMqttSubscribeTopic
 import uk.nktnet.webviewkiosk.utils.replaceVariables
+import java.io.InputStream
+import java.security.MessageDigest
 import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -931,6 +936,123 @@ object MqttManager {
                 "Failed to subscribe to topic $subscribeTopic",
                 e
             )
+        }
+    }
+
+    fun publishTransferError(operation: String, error: String) {
+        val c = getReadyClient() ?: return
+        publishEventMessage(
+            c,
+            OutboundFileTransferErrorEvent(
+                messageId = UUID.randomUUID().toString(),
+                username = config.username,
+                appInstanceId = config.appInstanceId,
+                data = OutboundFileTransferErrorEvent.ErrorData(operation, error),
+            )
+        )
+    }
+
+    fun publishFileTransfer(
+        fileName: String,
+        mimeType: String,
+        category: String,
+        size: Long,
+        openStream: () -> InputStream?,
+    ) {
+        scope.launch(Dispatchers.IO) {
+            val c = getReadyClient() ?: return@launch
+            val transferId = UUID.randomUUID().toString()
+            val chunkSize = 128 * 1024
+            try {
+                val digest = MessageDigest.getInstance("SHA-256")
+                var hashed = 0L
+                openStream()?.use { input ->
+                    val buffer = ByteArray(chunkSize)
+                    while (true) {
+                        val read = input.read(buffer)
+                        if (read <= 0) break
+                        digest.update(buffer, 0, read)
+                        hashed += read
+                    }
+                } ?: throw IllegalStateException("Datei konnte nicht geöffnet werden.")
+
+                if (hashed != size) {
+                    throw IllegalStateException("Dateigröße hat sich während des Lesens geändert.")
+                }
+
+                val sha256 = digest.digest().joinToString("") { "%02x".format(Locale.US, it) }
+                val totalChunks = ((size + chunkSize - 1) / chunkSize).toInt()
+
+                publishEventMessage(
+                    c,
+                    OutboundFileTransferEvent(
+                        messageId = UUID.randomUUID().toString(),
+                        username = config.username,
+                        appInstanceId = config.appInstanceId,
+                        data = OutboundFileTransferEvent.FileTransferData(
+                            transferId = transferId,
+                            fileName = fileName,
+                            mimeType = mimeType,
+                            size = size,
+                            sha256 = sha256,
+                            totalChunks = totalChunks,
+                            chunkSize = chunkSize,
+                            category = category,
+                        ),
+                    )
+                )
+
+                openStream()?.use { input ->
+                    val buffer = ByteArray(chunkSize)
+                    var index = 0
+                    while (true) {
+                        val read = input.read(buffer)
+                        if (read <= 0) break
+                        val payload = buffer.copyOf(read)
+                        val topic = mqttVariableReplacement(
+                            config.publishEventTopic,
+                            mapOf(MqttVariableName.EVENT_TYPE.name to "file_chunk")
+                        ) + "/$transferId/$index"
+                        publishBinaryToMqtt(c, topic, payload, transferId)
+                        index++
+                    }
+                } ?: throw IllegalStateException("Datei konnte für die Übertragung nicht erneut geöffnet werden.")
+            } catch (e: Exception) {
+                publishTransferError(category, e.message ?: e.toString())
+            }
+        }
+    }
+
+    private fun publishBinaryToMqtt(
+        c: Mqtt5AsyncClient,
+        topic: String,
+        payload: ByteArray,
+        transferId: String,
+    ) {
+        if (!isValidMqttPublishTopic(topic)) {
+            addDebugLog("file transfer failed", "Invalid topic: $topic", transferId)
+            return
+        }
+        try {
+            c.publishWith()
+                .topic(topic)
+                .qos(config.publishEventQos.toMqttQos())
+                .retain(false)
+                .contentType("application/octet-stream")
+                .payload(payload)
+                .userProperties()
+                    .add("username", config.username)
+                    .add("appInstanceId", config.appInstanceId)
+                    .add("transferId", transferId)
+                    .applyUserProperties()
+                .send()
+                .whenComplete { _, throwable ->
+                    if (throwable != null) {
+                        addDebugLog("file chunk publish error", throwable.message, transferId)
+                    }
+                }
+        } catch (e: Exception) {
+            addDebugLog("file chunk publish failed", e.message, transferId)
         }
     }
 
