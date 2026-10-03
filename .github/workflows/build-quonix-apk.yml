@@ -1,0 +1,33 @@
+name: Build QUONIX APK
+
+on:
+  push:
+    branches:
+      - "build/quonix-apk"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: quonix-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
