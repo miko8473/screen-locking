@@ -58,6 +58,7 @@ import uk.nktnet.webviewkiosk.states.ThemeStateSingleton
 import uk.nktnet.webviewkiosk.states.UserInteractionStateSingleton
 import uk.nktnet.webviewkiosk.states.WaitingForUnlockStateSingleton
 import uk.nktnet.webviewkiosk.ui.components.auth.CustomAuthPasswordDialog
+import uk.nktnet.webviewkiosk.ui.components.auth.QuonixLockScreen
 import uk.nktnet.webviewkiosk.ui.components.webview.KeepScreenOnOption
 import uk.nktnet.webviewkiosk.ui.placeholders.UploadFileProgress
 import uk.nktnet.webviewkiosk.ui.screens.SetupNavHost
@@ -298,6 +299,7 @@ class MainActivity : AppCompatActivity() {
                     } ?: run {
                         CustomAuthPasswordDialog()
                         SetupNavHost(navController)
+                        QuonixLockScreen()
                     }
                 }
             }
