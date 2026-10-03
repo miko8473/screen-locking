@@ -163,6 +163,22 @@ data class OutboundPowerUnpluggedEvent(
 }
 
 @Serializable
+@SerialName("file_transfer_error")
+data class OutboundFileTransferErrorEvent(
+    override val messageId: String,
+    override val username: String,
+    override val appInstanceId: String,
+    val data: ErrorData,
+) : OutboundEventMessage {
+    @Serializable
+    data class ErrorData(
+        val operation: String,
+        val error: String,
+    )
+    override fun getEventType(): String = "file_transfer_error"
+}
+
+@Serializable
 @SerialName("file_transfer")
 data class OutboundFileTransferEvent(
     override val messageId: String,
