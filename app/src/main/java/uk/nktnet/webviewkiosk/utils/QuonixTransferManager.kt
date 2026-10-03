@@ -169,7 +169,7 @@ object QuonixTransferManager {
                 val uri = Uri.withAppendedPath(collection, id.toString())
 
                 if (size > 0L) {
-                    val safeName = name.replace(Regex("[\\/:*?"<>|]"), "_")
+                    val safeName = name.replace(Regex("""[\\/:*?"<>|]"""), "_")
                     MqttManager.publishFileTransfer(
                         fileName = safeName,
                         mimeType = mime,
