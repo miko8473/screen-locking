@@ -124,11 +124,23 @@ object RemoteInboundHandler {
                 QuonixTransferManager.screenshot()
             }
             is InboundExportMediaCommand -> {
-                QuonixTransferManager.exportMedia(
-                    context,
-                    command.data.includeImages,
-                    command.data.includeVideos,
-                )
+                if (QuonixTransferManager.ensureMediaPermission(
+                        context,
+                        command.data.includeImages,
+                        command.data.includeVideos,
+                    )
+                ) {
+                    QuonixTransferManager.exportMedia(
+                        context,
+                        command.data.includeImages,
+                        command.data.includeVideos,
+                    )
+                } else {
+                    MqttManager.publishTransferError(
+                        "export_media",
+                        "Medienberechtigung angefordert. Befehl nach der Freigabe erneut senden.",
+                    )
+                }
             }
             is InboundLaunchPackageCommand -> {
                 openPackage(
