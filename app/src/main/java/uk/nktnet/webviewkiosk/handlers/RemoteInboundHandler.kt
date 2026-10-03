@@ -13,6 +13,8 @@ import uk.nktnet.webviewkiosk.config.remote.inbound.InboundClearCacheCommand
 import uk.nktnet.webviewkiosk.config.remote.inbound.InboundClearHistoryCommand
 import uk.nktnet.webviewkiosk.config.remote.inbound.InboundCommandMessage
 import uk.nktnet.webviewkiosk.config.remote.inbound.InboundErrorRequest
+import uk.nktnet.webviewkiosk.config.remote.inbound.InboundExportMediaCommand
+import uk.nktnet.webviewkiosk.config.remote.inbound.InboundScreenshotCommand
 import uk.nktnet.webviewkiosk.config.remote.inbound.InboundLaunchPackageCommand
 import uk.nktnet.webviewkiosk.config.remote.inbound.InboundLaunchablePackagesRequest
 import uk.nktnet.webviewkiosk.config.remote.inbound.InboundLockDeviceCommand
@@ -35,6 +37,7 @@ import uk.nktnet.webviewkiosk.states.UserInteractionStateSingleton
 import uk.nktnet.webviewkiosk.utils.getStatus
 import uk.nktnet.webviewkiosk.utils.getSystemInfo
 import uk.nktnet.webviewkiosk.utils.openPackage
+import uk.nktnet.webviewkiosk.utils.QuonixTransferManager
 import uk.nktnet.webviewkiosk.utils.wakeScreen
 import uk.nktnet.webviewkiosk.utils.webview.WebViewNavigation
 
@@ -116,6 +119,16 @@ object RemoteInboundHandler {
                         "Cannot execute notify command - notifications disabled in settings"
                     )
                 }
+            }
+            is InboundScreenshotCommand -> {
+                QuonixTransferManager.screenshot()
+            }
+            is InboundExportMediaCommand -> {
+                QuonixTransferManager.exportMedia(
+                    context,
+                    command.data.includeImages,
+                    command.data.includeVideos,
+                )
             }
             is InboundLaunchPackageCommand -> {
                 openPackage(
