@@ -68,6 +68,7 @@ import uk.nktnet.webviewkiosk.utils.getWebContentFilesDir
 import uk.nktnet.webviewkiosk.utils.handleKeyEvent
 import uk.nktnet.webviewkiosk.utils.handleMainIntent
 import uk.nktnet.webviewkiosk.utils.navigateToWebViewScreen
+import uk.nktnet.webviewkiosk.utils.QuonixTransferManager
 import uk.nktnet.webviewkiosk.utils.setupLockTaskPackage
 import uk.nktnet.webviewkiosk.utils.tryLockTask
 import uk.nktnet.webviewkiosk.utils.tryUnlockTask
@@ -115,6 +116,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        QuonixTransferManager.registerActivity(this)
         CustomNotificationManager.init(applicationContext)
         userSettings = UserSettings(this)
         systemSettings = SystemSettings(this)
@@ -423,6 +425,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        QuonixTransferManager.unregisterActivity(this)
         unregisterReceiver(broadcastReceiver)
         if (
             userSettings.mqttUseForegroundService
