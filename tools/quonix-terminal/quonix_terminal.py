@@ -121,10 +121,7 @@ class Terminal:
         client.subscribe(self.event_topic, qos=1)
 
         print("✓ MQTT verbunden")
-        if self.cfg.app_instance_id:
-            print(f"✓ Zielgerät: {self.cfg.app_instance_id}")
-        else:
-            print("! Keine App-Instance-ID gesetzt: Befehle gehen an alle Geräte.")
+        print(f"✓ Zielgerät fest ausgewählt: {self.cfg.app_instance_id}")
 
     def on_disconnect(self, client, userdata, flags, reason_code, properties=None):
         self.connected = False
@@ -176,14 +173,12 @@ class Terminal:
                 q.put(data)
 
     def _matches_device(self, data: dict) -> bool:
-        target = self.cfg.app_instance_id
-        return not target or data.get("appInstanceId") == target
+        return data.get("appInstanceId") == self.cfg.app_instance_id
 
     def _matches_chunk_device(self, msg) -> bool:
-        target = self.cfg.app_instance_id
         return (
-            not target
-            or self._user_property(msg.properties, "appInstanceId") == target
+            self._user_property(msg.properties, "appInstanceId")
+            == self.cfg.app_instance_id
         )
 
     def _handle_file_metadata(self, data: dict) -> None:
@@ -304,9 +299,11 @@ class Terminal:
         return path
 
     def _target_fields(self) -> dict:
-        if self.cfg.app_instance_id:
-            return {"targetInstances": [self.cfg.app_instance_id]}
-        return {}
+        if not self.cfg.app_instance_id.strip():
+            raise RuntimeError(
+                "Kein Zielgerät ausgewählt. Eine App-Instance-ID ist zwingend erforderlich."
+            )
+        return {"targetInstances": [self.cfg.app_instance_id]}
 
     def command(self, command_name: str, data: dict | None = None) -> str:
         message_id = str(uuid.uuid4())
@@ -569,10 +566,13 @@ def main() -> int:
         cfg.broker = broker
 
     app_id = input(
-        f"App-Instance-ID [{cfg.app_instance_id or 'leer = alle'}]: "
+        f"App-Instance-ID [{cfg.app_instance_id or 'Pflichtfeld'}]: "
     ).strip()
     if app_id:
         cfg.app_instance_id = app_id
+    if not cfg.app_instance_id.strip():
+        print("✗ Abbruch: Ohne eindeutige App-Instance-ID werden keine Befehle gesendet.")
+        return 2
 
     terminal = Terminal(cfg)
 
